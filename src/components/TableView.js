@@ -10,10 +10,14 @@ const TableView = ({
   currentItems,
   startingID,
   fillEmptyRows,
+  sortConfig,
+  onSort,
+  expandedId,
+  onExpand,
 }) => {
   return (
     <table className="table-auto rounded-[0.3rem] w-full border-gray-300">
-      <TableHeader columns={columns} />
+      <TableHeader columns={columns} sortConfig={sortConfig} onSort={onSort} />
       {loading ? (
         <LoadingComponent columns={columns}>Loading...</LoadingComponent>
       ) : currentItems.length ? (
@@ -22,6 +26,8 @@ const TableView = ({
           columns={columns}
           startingID={startingID}
           fillEmptyRows={fillEmptyRows}
+          expandedId={expandedId}
+          onExpand={onExpand}
         />
       ) : (
         <LoadingComponent columns={columns}>No data found</LoadingComponent>
