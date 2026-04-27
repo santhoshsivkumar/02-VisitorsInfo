@@ -19,7 +19,11 @@ const visitorColumns = [
   { header: "IP Address", sortKey: "ip", accessor: (v) => v.ip },
   { header: "City", sortKey: "city", accessor: (v) => v.city },
   { header: "Region", sortKey: "region", accessor: (v) => v.region },
-  { header: "Country", sortKey: "country_name", accessor: (v) => v.country_name },
+  {
+    header: "Country",
+    sortKey: "country_name",
+    accessor: (v) => v.country_name,
+  },
   { header: "Postal Code", sortKey: "postal", accessor: (v) => v.postal },
   { header: "Date & Time", sortKey: "timestamp", accessor: (v) => v.dateTime },
 ];
@@ -27,9 +31,22 @@ const visitorColumns = [
 const eventColumns = [
   { header: "ID", sortKey: null, accessor: (v, sid, i) => sid + i },
   { header: "Type", sortKey: "source", accessor: (v) => v.source },
-  { header: "Name", sortKey: "name", accessor: (v) => v.name || v.googleName || v.nameOrLinkedin || "—" },
-  { header: "Contact", sortKey: null, accessor: (v) => v.googleEmail || v.company || v.github || "—" },
-  { header: "Rating", sortKey: "rating", accessor: (v) => v.rating ? `${"★".repeat(v.rating)}${"☆".repeat(5 - v.rating)}` : "—" },
+  {
+    header: "Name",
+    sortKey: "name",
+    accessor: (v) => v.name || v.googleName || v.nameOrLinkedin || "—",
+  },
+  {
+    header: "Contact",
+    sortKey: null,
+    accessor: (v) => v.googleEmail || v.company || v.github || "—",
+  },
+  {
+    header: "Rating",
+    sortKey: "rating",
+    accessor: (v) =>
+      v.rating ? `${"★".repeat(v.rating)}${"☆".repeat(5 - v.rating)}` : "—",
+  },
   { header: "Date & Time", sortKey: "timestamp", accessor: (v) => v.dateTime },
 ];
 
@@ -41,7 +58,9 @@ const GitHubVisitors = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [currentCollection, setCurrentCollection] = useState("Github Visitors");
+  const [currentCollection, setCurrentCollection] = useState(
+    () => localStorage.getItem("visitors_tab") || "Github Visitors",
+  );
   const [showPopup, setShowPopup] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,7 +85,7 @@ const GitHubVisitors = () => {
       }));
 
       const sortedData = visitorsData.sort(
-        (a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0)
+        (a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0),
       );
 
       setVisitors(sortedData);
@@ -103,7 +122,7 @@ const GitHubVisitors = () => {
       year: "numeric",
     });
     const todayCount = visitors.filter(
-      (v) => v.dateTime && v.dateTime.startsWith(todayStr)
+      (v) => v.dateTime && v.dateTime.startsWith(todayStr),
     ).length;
     const countryCounts = {};
     visitors.forEach((v) => {
@@ -112,7 +131,8 @@ const GitHubVisitors = () => {
           (countryCounts[v.country_name] || 0) + 1;
     });
     const topCountry =
-      Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "\u2014";
+      Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+      "\u2014";
     return { total, uniqueIPs, todayCount, topCountry };
   }, [visitors]);
 
@@ -122,12 +142,24 @@ const GitHubVisitors = () => {
     const term = searchTerm.toLowerCase();
     return visitors.filter((v) =>
       [
-        v.ip, v.city, v.region, v.country_name, v.postal, v.dateTime,
-        v.googleName, v.googleEmail, v.referrer,
-        v.name, v.nameOrLinkedin, v.whoAreYou, v.company, v.github, v.source,
+        v.ip,
+        v.city,
+        v.region,
+        v.country_name,
+        v.postal,
+        v.dateTime,
+        v.googleName,
+        v.googleEmail,
+        v.referrer,
+        v.name,
+        v.nameOrLinkedin,
+        v.whoAreYou,
+        v.company,
+        v.github,
+        v.source,
       ]
         .filter(Boolean)
-        .some((field) => String(field).toLowerCase().includes(term))
+        .some((field) => String(field).toLowerCase().includes(term)),
     );
   }, [visitors, searchTerm]);
 
@@ -137,12 +169,12 @@ const GitHubVisitors = () => {
     return [...filteredVisitors].sort((a, b) => {
       const aVal =
         sortConfig.key === "timestamp"
-          ? a.timestamp?.seconds ?? 0
-          : a[sortConfig.key] ?? "";
+          ? (a.timestamp?.seconds ?? 0)
+          : (a[sortConfig.key] ?? "");
       const bVal =
         sortConfig.key === "timestamp"
-          ? b.timestamp?.seconds ?? 0
-          : b[sortConfig.key] ?? "";
+          ? (b.timestamp?.seconds ?? 0)
+          : (b[sortConfig.key] ?? "");
       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
@@ -192,6 +224,7 @@ const GitHubVisitors = () => {
   const switchCollection = (col) => {
     setPassword("");
     setEmail("");
+    localStorage.setItem("visitors_tab", col);
     setCurrentCollection(col);
   };
 
@@ -243,10 +276,19 @@ const GitHubVisitors = () => {
           { label: "Total", value: stats.total, color: "bg-green-700" },
           { label: "Unique IPs", value: stats.uniqueIPs, color: "bg-blue-700" },
           { label: "Today", value: stats.todayCount, color: "bg-purple-700" },
-          { label: "Top Country", value: stats.topCountry, color: "bg-yellow-700" },
+          {
+            label: "Top Country",
+            value: stats.topCountry,
+            color: "bg-yellow-700",
+          },
         ].map(({ label, value, color }) => (
-          <div key={label} className={`${color} text-white rounded p-2 text-center`}>
-            <p className="text-xs font-semibold uppercase opacity-80">{label}</p>
+          <div
+            key={label}
+            className={`${color} text-white rounded p-2 text-center`}
+          >
+            <p className="text-xs font-semibold uppercase opacity-80">
+              {label}
+            </p>
             <p className="text-lg font-bold truncate">{value}</p>
           </div>
         ))}
